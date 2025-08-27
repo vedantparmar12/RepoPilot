@@ -197,16 +197,28 @@ export class GitHubPRServer {
   async start(): Promise<void> {
     const transport = new StdioServerTransport();
     
-    logger.info('Testing GitHub connection...');
-    const connected = await this.githubClient.testConnection();
+    // Skip GitHub connection test to avoid startup issues
+    // Connection will be tested on first API call
+    logger.info('Starting MCP server without initial GitHub test...');
     
-    if (!connected) {
-      logger.error('Failed to connect to GitHub API. Check your GITHUB_TOKEN.');
-      process.exit(1);
+    try {
+      await this.server.connect(transport);
+      logger.info('MCP server started successfully');
+      
+      // Test GitHub connection in background (non-blocking)
+      this.githubClient.testConnection().then(connected => {
+        if (connected) {
+          logger.info('GitHub API connection verified');
+        } else {
+          logger.warn('GitHub API connection failed - check your GITHUB_TOKEN');
+        }
+      }).catch(err => {
+        logger.warn({ error: err }, 'GitHub API test failed');
+      });
+    } catch (error) {
+      logger.error({ error }, 'Failed to start MCP server');
+      throw error;
     }
-    
-    await this.server.connect(transport);
-    logger.info('MCP server started successfully');
   }
 
   async stop(): Promise<void> {

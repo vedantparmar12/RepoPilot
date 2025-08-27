@@ -8,7 +8,7 @@ const OVERLAP_LINES = 3;
 
 export function estimateTokens(text: string): number {
   const baseTokens = text.length / 3.5;
-  const specialChars = (text.match(/[{}()\[\];,.<>!@#$%^&*+=|\\/"'`~]/g) || []).length;
+  const specialChars = (text.match(/[{}()[\];,.<>!@#$%^&*+=|\\/"'`~]/g) || []).length;
   const newlines = (text.match(/\n/g) || []).length;
   return Math.ceil(baseTokens + specialChars * 0.5 + newlines * 0.2);
 }
