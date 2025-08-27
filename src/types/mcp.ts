@@ -57,13 +57,14 @@ export const SubmitReviewSchema = z.object({
   owner: z.string().describe('Repository owner'),
   repo: z.string().describe('Repository name'),
   pr_number: z.number().describe('Pull request number'),
-  event: z.enum(['APPROVE', 'REQUEST_CHANGES', 'COMMENT']).describe('Review action'),
-  body: z.string().describe('Review summary body'),
+  event: z.enum(['APPROVE', 'REQUEST_CHANGES', 'COMMENT', 'PENDING']).describe('Review action'),
+  body: z.string().optional().describe('Review summary body'),
   comments: z.array(z.object({
     path: z.string().describe('File path'),
     line: z.number().optional().describe('Line number'),
     start_line: z.number().optional().describe('Start line for multi-line comment'),
     side: z.enum(['LEFT', 'RIGHT']).optional().default('RIGHT'),
+    start_side: z.enum(['LEFT', 'RIGHT']).optional(),
     body: z.string().describe('Comment body')
   })).optional().describe('Inline comments to include with review')
 });
