@@ -39,7 +39,7 @@ First, let's get the project on your machine:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/mcp-github-pr.git
+git clone https://github.com/vedantparmar12/github-pr
 cd mcp-github-pr
 
 # Install all the dependencies
@@ -79,7 +79,7 @@ Now comes the fun part - connecting this to your AI assistant! The setup varies 
 
 Cursor needs to know about our MCP server. Here's the exact configuration that works:
 
-#### Windows (Tested and Working ✅)
+#### Windows (Tested and Working)
 
 1. Create or edit the file at:
    ```
@@ -129,6 +129,8 @@ If you still see issues, try using a batch file:
          "env": {
            "GITHUB_TOKEN": "ghp_YourGitHubTokenHere",
            "MCP_SERVER_PORT": "3000"
+           "MAX_TOKENS_PER_CHUNK": "4000"
+
          }
        }
      }
@@ -199,6 +201,8 @@ If you're using VS Code with the MCP extension:
       "env": {
         "GITHUB_TOKEN": "ghp_YourGitHubTokenHere",
         "MCP_SERVER_PORT": "3000"
+        "MAX_TOKENS_PER_CHUNK": "4000"
+
       }
     }
   }
