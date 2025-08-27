@@ -37,7 +37,7 @@ export class ListFilesTool implements MCPTool {
 
       const groupedFiles = this.groupFilesByDirectory(files);
       
-      let output = `# Changed Files (Page ${input.page})
+      const output = `# Changed Files (Page ${input.page})
 
 Total files on this page: ${files.length}
 ${hasMore ? `More files available - use page=${input.page + 1} to see next page` : 'No more files'}
