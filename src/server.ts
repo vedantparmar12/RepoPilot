@@ -13,6 +13,7 @@ import { ListFilesTool } from './tools/list-files';
 import { ReadFileTool } from './tools/read-file';
 import { AddCommentTool } from './tools/add-comment';
 import { SubmitReviewTool } from './tools/submit-review';
+import { createPRTool } from './tools/create-pr';
 import { MCPTool } from './types/mcp';
 import { createLogger } from './utils/logger';
 import { z } from 'zod';
@@ -54,6 +55,15 @@ export class GitHubPRServer {
       new SubmitReviewTool(this.githubClient)
     ];
 
+    // Register create-pr tool with manual JSON schema conversion
+    this.tools.set(createPRTool.name, {
+      name: createPRTool.name,
+      description: createPRTool.description,
+      inputSchema: createPRTool.inputSchema as any, // JSON Schema format
+      handler: createPRTool.handler,
+      isJsonSchema: true // Flag to indicate this uses JSON Schema directly
+    } as any);
+
     for (const tool of toolInstances) {
       this.tools.set(tool.name, tool);
       logger.info({ tool: tool.name }, 'Tool registered');
@@ -67,7 +77,7 @@ export class GitHubPRServer {
       const tools = Array.from(this.tools.values()).map(tool => ({
         name: tool.name,
         description: tool.description,
-        inputSchema: this.zodToJsonSchema(tool.inputSchema)
+        inputSchema: (tool as any).isJsonSchema ? tool.inputSchema : this.zodToJsonSchema(tool.inputSchema)
       }));
 
       return { tools };
