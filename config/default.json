@@ -1,0 +1,26 @@
+{
+  "github": {
+    "api_version": "2022-11-28",
+    "per_page": 100,
+    "timeout": 30000,
+    "base_url": "https://api.github.com"
+  },
+  "pagination": {
+    "max_tokens": 4000,
+    "overlap_lines": 3,
+    "context_ttl_minutes": 30
+  },
+  "rate_limit": {
+    "max_retries": 3,
+    "backoff_multiplier": 2,
+    "initial_delay": 1000
+  },
+  "logging": {
+    "level": "info",
+    "format": "json"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost"
+  }
+}
