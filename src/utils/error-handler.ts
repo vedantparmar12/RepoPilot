@@ -25,4 +25,29 @@ export class AuthenticationError extends Error {
   }
 }
 
+export function handleError(error: any, toolName: string): { content: Array<{ type: 'text' | 'image' | 'resource', text?: string, data?: any, mimeType?: string }>, isError: boolean } {
+  let errorMessage = 'An unknown error occurred';
+  
+  if (error instanceof GitHubAPIError) {
+    errorMessage = `GitHub API Error: ${error.message}`;
+    if (error.statusCode) {
+      errorMessage += ` (Status: ${error.statusCode})`;
+    }
+  } else if (error instanceof AuthenticationError) {
+    errorMessage = `Authentication Error: ${error.message}`;
+  } else if (error instanceof PaginationError) {
+    errorMessage = `Pagination Error: ${error.message}`;
+  } else if (error.message) {
+    errorMessage = error.message;
+  }
+
+  return {
+    content: [{
+      type: 'text',
+      text: `Error in ${toolName}: ${errorMessage}`
+    }],
+    isError: true
+  };
+}
+
 

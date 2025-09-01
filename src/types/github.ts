@@ -101,3 +101,42 @@ export interface CreateReviewParams {
     body: string;
   }>;
 }
+
+export interface GitHubIssue {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: 'open' | 'closed';
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  assignees: Array<{
+    login: string;
+    avatar_url: string;
+  }>;
+  labels: Array<{
+    name: string;
+    color: string;
+    description: string | null;
+  }>;
+  milestone?: {
+    id: number;
+    number: number;
+    title: string;
+  };
+}
+
+export interface CreateIssueParams {
+  owner: string;
+  repo: string;
+  title: string;
+  body?: string;
+  assignees?: string[];
+  milestone?: number;
+  labels?: string[];
+}

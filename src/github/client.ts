@@ -2,7 +2,7 @@ import { Octokit } from '@octokit/rest';
 import { createLogger } from '../utils/logger';
 import { RateLimiter } from '../utils/rate-limiter';
 import { AuthenticationError } from '../utils/error-handler';
-import { PullRequest, FileDiff, ReviewComment, Review, CreateReviewParams } from '../types/github';
+import { PullRequest, FileDiff, ReviewComment, Review, CreateReviewParams, GitHubIssue, CreateIssueParams } from '../types/github';
 
 const logger = createLogger('GitHubClient');
 
@@ -225,6 +225,57 @@ export class GitHubClient {
         },
         created_at: (data as any).created_at || new Date().toISOString(),
         submitted_at: data.submitted_at
+      };
+    });
+  }
+
+  async createIssue(params: CreateIssueParams): Promise<GitHubIssue> {
+    return this.rateLimiter.withBackoff(async () => {
+      logger.debug({ 
+        owner: params.owner, 
+        repo: params.repo, 
+        title: params.title 
+      }, 'Creating GitHub issue');
+      
+      const { data, headers } = await this.octokit.issues.create({
+        owner: params.owner,
+        repo: params.repo,
+        title: params.title,
+        body: params.body,
+        assignees: params.assignees,
+        milestone: params.milestone,
+        labels: params.labels
+      });
+
+      this.rateLimiter.updateFromHeaders(headers as any);
+
+      return {
+        id: data.id,
+        number: data.number,
+        title: data.title,
+        body: data.body || null,
+        state: data.state as GitHubIssue['state'],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        closed_at: data.closed_at,
+        user: {
+          login: data.user?.login || 'unknown',
+          avatar_url: data.user?.avatar_url || ''
+        },
+        assignees: data.assignees?.map(assignee => ({
+          login: assignee.login,
+          avatar_url: assignee.avatar_url
+        })) || [],
+        labels: data.labels?.map(label => ({
+          name: typeof label === 'string' ? label : (label.name || ''),
+          color: typeof label === 'string' ? '' : (label.color || ''),
+          description: typeof label === 'string' ? null : (label.description || null)
+        })) || [],
+        milestone: data.milestone ? {
+          id: data.milestone.id,
+          number: data.milestone.number,
+          title: data.milestone.title
+        } : undefined
       };
     });
   }
