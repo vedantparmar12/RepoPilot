@@ -140,3 +140,23 @@ export interface CreateIssueParams {
   milestone?: number;
   labels?: string[];
 }
+
+export interface UpdateIssueParams {
+  owner: string;
+  repo: string;
+  issue_number: number;
+  title?: string;
+  body?: string;
+  state?: 'open' | 'closed';
+  state_reason?: 'completed' | 'not_planned' | 'reopened';
+  assignees?: string[];
+  milestone?: number | null;
+  labels?: string[];
+}
+
+export interface CreateIssueCommentParams {
+  owner: string;
+  repo: string;
+  issue_number: number;
+  body: string;
+}
