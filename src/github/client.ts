@@ -2,7 +2,7 @@ import { Octokit } from '@octokit/rest';
 import { createLogger } from '../utils/logger';
 import { RateLimiter } from '../utils/rate-limiter';
 import { AuthenticationError } from '../utils/error-handler';
-import { PullRequest, FileDiff, ReviewComment, Review, CreateReviewParams, GitHubIssue, CreateIssueParams } from '../types/github';
+import { PullRequest, FileDiff, ReviewComment, Review, CreateReviewParams, GitHubIssue, CreateIssueParams, UpdateIssueParams, CreateIssueCommentParams } from '../types/github';
 
 const logger = createLogger('GitHubClient');
 
@@ -276,6 +276,93 @@ export class GitHubClient {
           number: data.milestone.number,
           title: data.milestone.title
         } : undefined
+      };
+    });
+  }
+
+  async updateIssue(params: UpdateIssueParams): Promise<GitHubIssue> {
+    return this.rateLimiter.withBackoff(async () => {
+      logger.debug({ 
+        owner: params.owner, 
+        repo: params.repo, 
+        issue_number: params.issue_number,
+        updates: Object.keys(params).filter(key => !['owner', 'repo', 'issue_number'].includes(key))
+      }, 'Updating GitHub issue');
+      
+      const updateData: any = {};
+      if (params.title !== undefined) updateData.title = params.title;
+      if (params.body !== undefined) updateData.body = params.body;
+      if (params.state !== undefined) updateData.state = params.state;
+      if (params.state_reason !== undefined) updateData.state_reason = params.state_reason;
+      if (params.assignees !== undefined) updateData.assignees = params.assignees;
+      if (params.milestone !== undefined) updateData.milestone = params.milestone;
+      if (params.labels !== undefined) updateData.labels = params.labels;
+
+      const { data, headers } = await this.octokit.issues.update({
+        owner: params.owner,
+        repo: params.repo,
+        issue_number: params.issue_number,
+        ...updateData
+      });
+
+      this.rateLimiter.updateFromHeaders(headers as any);
+
+      return {
+        id: data.id,
+        number: data.number,
+        title: data.title,
+        body: data.body || null,
+        state: data.state as GitHubIssue['state'],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        closed_at: data.closed_at,
+        user: {
+          login: data.user?.login || 'unknown',
+          avatar_url: data.user?.avatar_url || ''
+        },
+        assignees: data.assignees?.map(assignee => ({
+          login: assignee.login,
+          avatar_url: assignee.avatar_url
+        })) || [],
+        labels: data.labels?.map(label => ({
+          name: typeof label === 'string' ? label : (label.name || ''),
+          color: typeof label === 'string' ? '' : (label.color || ''),
+          description: typeof label === 'string' ? null : (label.description || null)
+        })) || [],
+        milestone: data.milestone ? {
+          id: data.milestone.id,
+          number: data.milestone.number,
+          title: data.milestone.title
+        } : undefined
+      };
+    });
+  }
+
+  async createIssueComment(params: CreateIssueCommentParams): Promise<{ id: number; body: string; created_at: string; user: { login: string; avatar_url: string } }> {
+    return this.rateLimiter.withBackoff(async () => {
+      logger.debug({ 
+        owner: params.owner, 
+        repo: params.repo, 
+        issue_number: params.issue_number 
+      }, 'Creating issue comment');
+      
+      const { data, headers } = await this.octokit.issues.createComment({
+        owner: params.owner,
+        repo: params.repo,
+        issue_number: params.issue_number,
+        body: params.body
+      });
+
+      this.rateLimiter.updateFromHeaders(headers as any);
+
+      return {
+        id: data.id,
+        body: data.body || '',
+        created_at: data.created_at,
+        user: {
+          login: data.user?.login || 'unknown',
+          avatar_url: data.user?.avatar_url || ''
+        }
       };
     });
   }
