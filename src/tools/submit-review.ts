@@ -27,7 +27,6 @@ export class SubmitReviewTool implements MCPTool {
         comments_count: input.comments?.length || 0
       }, 'Submitting review');
 
-      // Validate that we have a body or comments
       if (!input.body && (!input.comments || input.comments.length === 0)) {
         input.body = this.generateDefaultBody(input.event);
       }
@@ -54,7 +53,6 @@ export class SubmitReviewTool implements MCPTool {
     } catch (error: any) {
       logger.error({ error }, 'Failed to submit review');
       
-      // Provide helpful error messages
       let errorMessage = 'Failed to submit review';
       
       if (error.message?.includes('validation')) {
@@ -101,12 +99,12 @@ export class SubmitReviewTool implements MCPTool {
     output += `**Submitted:** ${review.submitted_at ? new Date(review.submitted_at).toLocaleString() : 'Just now'}\n\n`;
     
     if (review.body) {
-      output += `### Review Summary\n\n`;
+      output += '### Review Summary\n\n';
       output += `${review.body}\n\n`;
     }
     
     if (input.comments && input.comments.length > 0) {
-      output += `### Inline Comments Added\n\n`;
+      output += '### Inline Comments Added\n\n';
       output += `This review includes ${input.comments.length} inline comment${input.comments.length !== 1 ? 's' : ''}:\n\n`;
       
       input.comments.forEach((comment, index) => {
@@ -118,14 +116,13 @@ export class SubmitReviewTool implements MCPTool {
       });
     }
     
-    output += `---\n`;
+    output += '---\n';
     output += `The review has been successfully submitted to PR #${input.pr_number}.`;
     
-    // Add a note about the review type
     if (input.event === 'APPROVE') {
-      output += `\n\nThis approval allows the PR to be merged if all other requirements are met.`;
+      output += '\n\nThis approval allows the PR to be merged if all other requirements are met.';
     } else if (input.event === 'REQUEST_CHANGES') {
-      output += `\n\nThe author needs to address the requested changes before this PR can be merged.`;
+      output += '\n\nThe author needs to address the requested changes before this PR can be merged.';
     }
     
     return output;

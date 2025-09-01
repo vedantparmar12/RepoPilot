@@ -43,10 +43,9 @@ export class CreatePRTool {
 
   async execute(args: CreatePRArgs) {
     try {
-      const { owner, repo, head, base, draft = false } = args;
-      let { title, body, auto_generate = true } = args;
+      const { owner, repo, head, base, draft = false, auto_generate = true } = args;
+      let { title, body } = args;
 
-      // If auto_generate is true, analyze changes and create comprehensive PR
       if (auto_generate) {
         const analysis = await this.analyzeChanges(owner, repo, head, base);
         
@@ -59,12 +58,10 @@ export class CreatePRTool {
         }
       }
 
-      // Fallback if no title provided
       if (!title) {
         title = `Merge ${head} into ${base}`;
       }
 
-      // Create the pull request
       const response = await this.octokit.pulls.create({
         owner,
         repo,
@@ -104,13 +101,13 @@ export class CreatePRTool {
             }, null, 2),
           },
         ],
+        isError: true
       };
     }
   }
 
   private async analyzeChanges(owner: string, repo: string, head: string, base: string) {
     try {
-      // Get commit comparison
       const comparison = await this.octokit.repos.compareCommits({
         owner,
         repo,
@@ -118,7 +115,6 @@ export class CreatePRTool {
         head,
       });
 
-      // Get file changes with patches
       const fileChanges: FileChange[] = comparison.data.files?.map(file => ({
         filename: file.filename,
         additions: file.additions,
@@ -128,7 +124,6 @@ export class CreatePRTool {
         patch: file.patch,
       })) || [];
 
-      // Get commit information
       const commits: CommitInfo[] = comparison.data.commits.map(commit => ({
         sha: commit.sha.substring(0, 7),
         message: commit.commit.message,
@@ -136,7 +131,6 @@ export class CreatePRTool {
         date: commit.commit.author?.date || '',
       }));
 
-      // Advanced analysis
       const categories = this.categorizeFiles(fileChanges);
       const commitTypes = this.analyzeCommitTypes(commits);
       const codePatterns = this.analyzeCodePatterns(fileChanges);
@@ -190,7 +184,6 @@ export class CreatePRTool {
     files.forEach(file => {
       let category = 'Other Files';
       
-      // Detailed categorization
       if (file.filename.includes('test') || file.filename.includes('spec')) {
         category = 'Test Files';
       } else if (file.filename.match(/\.(md|txt|rst)$/i)) {
@@ -286,7 +279,6 @@ export class CreatePRTool {
     fileChanges.forEach(file => {
       if (!file.patch) return;
 
-      // Analyze for common patterns
       if (file.patch.includes('async') || file.patch.includes('await')) {
         patterns.push({
           pattern: 'Asynchronous Operations',
@@ -336,7 +328,6 @@ export class CreatePRTool {
       }
     });
 
-    // Remove duplicates
     const uniquePatterns = patterns.filter((pattern, index, self) =>
       index === self.findIndex(p => p.type === pattern.type)
     );
@@ -353,7 +344,6 @@ export class CreatePRTool {
       performanceImpact: 'Minimal',
     };
 
-    // Calculate risk level
     const totalChanges = fileChanges.reduce((sum, f) => sum + f.changes, 0);
     if (totalChanges > 1000) {
       impact.riskLevel = 'High';
@@ -361,7 +351,6 @@ export class CreatePRTool {
       impact.riskLevel = 'Medium';
     }
 
-    // Identify affected areas
     fileChanges.forEach(file => {
       if (file.filename.includes('api')) {
         impact.affectedAreas.push('API endpoints');
@@ -374,7 +363,7 @@ export class CreatePRTool {
       if (file.filename.includes('auth')) {
         impact.affectedAreas.push('Authentication system');
         impact.testingRequired.push('Security and authentication flows');
-        impact.riskLevel = 'High'; // Auth changes are always high risk
+        impact.riskLevel = 'High';
       }
       if (file.filename.includes('config')) {
         impact.affectedAreas.push('Application configuration');
@@ -382,7 +371,6 @@ export class CreatePRTool {
       }
     });
 
-    // Check for breaking changes
     fileChanges.forEach(file => {
       if (file.status === 'removed') {
         impact.potentialBreaking.push(`Removed file: ${file.filename}`);
@@ -392,7 +380,6 @@ export class CreatePRTool {
       }
     });
 
-    // Assess performance impact
     const hasPerformancePatterns = patterns.some(p => 
       p.type === 'sql-queries' || p.pattern.includes('Performance')
     );
@@ -406,17 +393,14 @@ export class CreatePRTool {
   private extractFeatures(commits: CommitInfo[], fileChanges: FileChange[]): string[] {
     const features: string[] = [];
 
-    // Extract from commit messages
     commits.forEach(commit => {
       const message = commit.message;
       
-      // Look for feature descriptions
       const featureMatch = message.match(/(?:feat|feature|add|implement)(?:\(.*?\))?:\s*(.+)/i);
       if (featureMatch) {
         features.push(featureMatch[1].trim());
       }
 
-      // Look for bullet points in commit body
       const bulletPoints = message.match(/[-*]\s+(.+)/g);
       if (bulletPoints) {
         bulletPoints.forEach(point => {
@@ -425,7 +409,6 @@ export class CreatePRTool {
       }
     });
 
-    // Infer features from file changes
     const fileGroups = this.categorizeFiles(fileChanges);
     
     if (fileGroups['React Components'] && fileGroups['React Components'].length > 0) {
@@ -443,7 +426,7 @@ export class CreatePRTool {
       features.push(`API service modifications in ${fileGroups['API Services'].length} files`);
     }
 
-    return [...new Set(features)]; // Remove duplicates
+    return [...new Set(features)];
   }
 
   private analyzeTechnicalChanges(fileChanges: FileChange[]): Record<string, any> {
@@ -458,7 +441,6 @@ export class CreatePRTool {
     fileChanges.forEach(file => {
       if (!file.patch) return;
 
-      // Check for new classes or major structures
       const newClasses = file.patch.match(/\+\s*(?:export\s+)?(?:class|interface)\s+(\w+)/g);
       if (newClasses) {
         newClasses.forEach(match => {
@@ -469,19 +451,16 @@ export class CreatePRTool {
         });
       }
 
-      // Check for new functions
       const newFunctions = file.patch.match(/\+\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)|(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(/g);
       if (newFunctions) {
         technical.addedFunctionality.push(`New functions in ${file.filename}`);
       }
 
-      // Check for removed functions
       const removedFunctions = file.patch.match(/-\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)|-\s*(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(/g);
       if (removedFunctions) {
         technical.removedFunctionality.push(`Removed functions from ${file.filename}`);
       }
 
-      // Check for pattern implementations
       if (file.patch.includes('Observer') || file.patch.includes('Subject')) {
         technical.newPatterns.push('Observer pattern implementation');
       }
@@ -505,30 +484,27 @@ export class CreatePRTool {
 
     const packageFile = fileChanges.find(f => f.filename === 'package.json');
     if (packageFile && packageFile.patch) {
-      // Parse added dependencies
-      const addedDeps = packageFile.patch.match(/\+\s*"([^"]+)":\s*"[^"]+"/g);
+      const addedDeps = packageFile.patch.match(/\+\s*'([^']+)':\s*'[^']+'/g);
       if (addedDeps) {
         addedDeps.forEach(dep => {
-          const match = dep.match(/"([^"]+)":/);
+          const match = dep.match(/'([^']+)':/);
           if (match) dependencies.added.push(match[1]);
         });
       }
 
-      // Parse removed dependencies
-      const removedDeps = packageFile.patch.match(/-\s*"([^"]+)":\s*"[^"]+"/g);
+      const removedDeps = packageFile.patch.match(/-\s*'([^']+)':\s*'[^']+'/g);
       if (removedDeps) {
         removedDeps.forEach(dep => {
-          const match = dep.match(/"([^"]+)":/);
+          const match = dep.match(/'([^']+)':/);
           if (match) dependencies.removed.push(match[1]);
         });
       }
 
-      // Check for version updates
       const lines = packageFile.patch.split('\n');
       for (let i = 0; i < lines.length - 1; i++) {
         if (lines[i].startsWith('-') && lines[i + 1].startsWith('+')) {
-          const oldMatch = lines[i].match(/"([^"]+)":\s*"([^"]+)"/);
-          const newMatch = lines[i + 1].match(/"([^"]+)":\s*"([^"]+)"/);
+          const oldMatch = lines[i].match(/'([^']+)':\s*'([^']+)'/);
+          const newMatch = lines[i + 1].match(/'([^']+)':\s*'([^']+)'/);
           if (oldMatch && newMatch && oldMatch[1] === newMatch[1] && oldMatch[2] !== newMatch[2]) {
             dependencies.updated.push(`${oldMatch[1]}: ${oldMatch[2]} → ${newMatch[2]}`);
           }
@@ -542,7 +518,6 @@ export class CreatePRTool {
   private generateProfessionalTitle(analysis: any): string {
     const { commitTypes, stats, categories, features } = analysis;
     
-    // Determine primary change type
     const primaryType = Object.entries(commitTypes as Record<string, any[]>)
       .filter(([_, commits]) => commits.length > 0)
       .sort(([_, a], [__, b]) => b.length - a.length)[0];
@@ -592,25 +567,23 @@ export class CreatePRTool {
   private generateComprehensiveBody(analysis: any): string {
     const { categories, commitTypes, stats, impactAnalysis, features, technicalChanges, dependencies } = analysis;
 
-    let body = `## Executive Summary\n\n`;
+    let body = '## Executive Summary\n\n';
     body += this.generateExecutiveSummary(analysis);
     body += '\n\n';
 
-    // Features and improvements section
     if (features && features.length > 0) {
-      body += `## Features and Improvements\n\n`;
+      body += '## Features and Improvements\n\n';
       features.forEach((feature: string) => {
         body += `- ${feature}\n`;
       });
       body += '\n';
     }
 
-    // Technical changes
     if (technicalChanges && Object.values(technicalChanges).some((arr: any) => arr.length > 0)) {
-      body += `## Technical Changes\n\n`;
+      body += '## Technical Changes\n\n';
       
       if (technicalChanges.architecturalChanges?.length > 0) {
-        body += `### Architectural Updates\n`;
+        body += '### Architectural Updates\n';
         technicalChanges.architecturalChanges.forEach((change: string) => {
           body += `- ${change}\n`;
         });
@@ -618,7 +591,7 @@ export class CreatePRTool {
       }
 
       if (technicalChanges.newPatterns?.length > 0) {
-        body += `### Design Patterns\n`;
+        body += '### Design Patterns\n';
         technicalChanges.newPatterns.forEach((pattern: string) => {
           body += `- ${pattern}\n`;
         });
@@ -626,7 +599,7 @@ export class CreatePRTool {
       }
 
       if (technicalChanges.addedFunctionality?.length > 0) {
-        body += `### Added Functionality\n`;
+        body += '### Added Functionality\n';
         technicalChanges.addedFunctionality.forEach((func: string) => {
           body += `- ${func}\n`;
         });
@@ -634,7 +607,7 @@ export class CreatePRTool {
       }
 
       if (technicalChanges.removedFunctionality?.length > 0) {
-        body += `### Removed/Deprecated\n`;
+        body += '### Removed/Deprecated\n';
         technicalChanges.removedFunctionality.forEach((func: string) => {
           body += `- ${func}\n`;
         });
@@ -642,8 +615,7 @@ export class CreatePRTool {
       }
     }
 
-    // Code changes by category
-    body += `## Changed Files Analysis\n\n`;
+    body += '## Changed Files Analysis\n\n';
     body += `Total: **${stats.filesChanged} files** | **+${stats.additions} additions** | **-${stats.deletions} deletions**\n\n`;
     
     Object.entries(categories as Record<string, FileChange[]>).forEach(([category, files]) => {
@@ -655,7 +627,6 @@ export class CreatePRTool {
       body += `### ${category} (${files.length} file${files.length !== 1 ? 's' : ''})\n\n`;
       body += `Changes: +${categoryStats.additions} / -${categoryStats.deletions}\n\n`;
       
-      // Group files by directory
       const filesByDir: Record<string, FileChange[]> = {};
       files.forEach((file: FileChange) => {
         const dir = file.filename.substring(0, file.filename.lastIndexOf('/')) || 'root';
@@ -674,14 +645,13 @@ export class CreatePRTool {
       });
     });
 
-    // Impact Analysis
     if (impactAnalysis) {
-      body += `## Impact Analysis\n\n`;
+      body += '## Impact Analysis\n\n';
       body += `**Risk Level:** ${impactAnalysis.riskLevel}\n`;
       body += `**Performance Impact:** ${impactAnalysis.performanceImpact}\n\n`;
       
       if (impactAnalysis.affectedAreas?.length > 0) {
-        body += `### Affected Areas\n`;
+        body += '### Affected Areas\n';
         impactAnalysis.affectedAreas.forEach((area: string) => {
           body += `- ${area}\n`;
         });
@@ -690,6 +660,7 @@ export class CreatePRTool {
 
       if (impactAnalysis.potentialBreaking?.length > 0) {
         body += `### Potential Breaking Changes\n`;
+
         impactAnalysis.potentialBreaking.forEach((change: string) => {
           body += `- ${change}\n`;
         });
@@ -697,12 +668,11 @@ export class CreatePRTool {
       }
     }
 
-    // Dependencies section
     if (dependencies && Object.values(dependencies).some((arr: any) => arr.length > 0)) {
-      body += `## Dependencies\n\n`;
+      body += '## Dependencies\n\n';
       
       if (dependencies.added?.length > 0) {
-        body += `### Added\n`;
+        body += '### Added\n';
         dependencies.added.forEach((dep: string) => {
           body += `- \`${dep}\`\n`;
         });
@@ -710,7 +680,7 @@ export class CreatePRTool {
       }
 
       if (dependencies.removed?.length > 0) {
-        body += `### Removed\n`;
+        body += '### Removed\n';
         dependencies.removed.forEach((dep: string) => {
           body += `- \`${dep}\`\n`;
         });
@@ -718,7 +688,7 @@ export class CreatePRTool {
       }
 
       if (dependencies.updated?.length > 0) {
-        body += `### Updated\n`;
+        body += '### Updated\n';
         dependencies.updated.forEach((dep: string) => {
           body += `- ${dep}\n`;
         });
@@ -726,35 +696,31 @@ export class CreatePRTool {
       }
     }
 
-    // Testing requirements
     if (impactAnalysis?.testingRequired?.length > 0) {
-      body += `## Testing Requirements\n\n`;
-      body += `The following areas require thorough testing:\n\n`;
+      body += '## Testing Requirements\n\n';
+      body += 'The following areas require thorough testing:\n\n';
       impactAnalysis.testingRequired.forEach((test: string) => {
         body += `- ${test}\n`;
       });
       body += '\n';
     }
 
-    // Migration guide
     if (impactAnalysis?.potentialBreaking?.length > 0 || dependencies?.removed?.length > 0) {
-      body += `## Migration Guide\n\n`;
-      body += `This PR contains changes that may require updates to existing code:\n\n`;
+      body += '## Migration Guide\n\n';
+      body += 'This PR contains changes that may require updates to existing code:\n\n';
       
       if (dependencies?.removed?.length > 0) {
-        body += `1. **Removed Dependencies:** Ensure alternative implementations for removed packages\n`;
+        body += '1. **Removed Dependencies:** Ensure alternative implementations for removed packages\n';
       }
       if (impactAnalysis?.potentialBreaking?.length > 0) {
-        body += `2. **Breaking Changes:** Review and update affected code areas\n`;
+        body += '2. **Breaking Changes:** Review and update affected code areas\n';
       }
-      body += `3. **Testing:** Run comprehensive test suite before deployment\n`;
-      body += `4. **Documentation:** Update relevant documentation to reflect changes\n\n`;
+      body += '3. **Testing:** Run comprehensive test suite before deployment\n';
+      body += '4. **Documentation:** Update relevant documentation to reflect changes\n\n';
     }
 
-    // Commit details
-    body += `## Commit Details\n\n`;
+    body += '## Commit Details\n\n';
     
-    // Group commits by type
     Object.entries(commitTypes as Record<string, CommitInfo[]>).forEach(([type, typeCommits]) => {
       if (typeCommits.length === 0) return;
       
@@ -772,43 +738,41 @@ export class CreatePRTool {
       body += '\n';
     });
 
-    // Review checklist
-    body += `## Pre-Merge Checklist\n\n`;
-    body += `- [ ] Code review completed\n`;
-    body += `- [ ] All tests passing\n`;
-    body += `- [ ] Documentation updated\n`;
-    body += `- [ ] No console errors or warnings\n`;
-    body += `- [ ] Performance impact assessed\n`;
+    body += '## Pre-Merge Checklist\n\n';
+    body += '- [ ] Code review completed\n';
+    body += '- [ ] All tests passing\n';
+    body += '- [ ] Documentation updated\n';
+    body += '- [ ] No console errors or warnings\n';
+    body += '- [ ] Performance impact assessed\n';
     
     if (impactAnalysis?.riskLevel === 'High') {
-      body += `- [ ] Security review completed\n`;
-      body += `- [ ] Rollback plan prepared\n`;
+      body += '- [ ] Security review completed\n';
+      body += '- [ ] Rollback plan prepared\n';
     }
     
     if (dependencies?.added?.length > 0) {
-      body += `- [ ] New dependencies reviewed for security\n`;
-      body += `- [ ] License compatibility verified\n`;
+      body += '- [ ] New dependencies reviewed for security\n';
+      body += '- [ ] License compatibility verified\n';
     }
     
-    body += `- [ ] Deployment plan prepared\n`;
+    body += '- [ ] Deployment plan prepared\n';
     
-    // Deployment notes
-    body += `\n## Deployment Notes\n\n`;
+    body += '\n## Deployment Notes\n\n';
     
     if (dependencies?.added?.length > 0 || dependencies?.updated?.length > 0) {
-      body += `- Run \`npm install\` or \`yarn install\` to update dependencies\n`;
+      body += '- Run `npm install` or `yarn install` to update dependencies\n';
     }
     
     if (categories['Database Migrations']) {
-      body += `- Execute database migrations before deployment\n`;
+      body += '- Execute database migrations before deployment\n';
     }
     
     if (categories['Configuration'] || categories['YAML Configuration'] || categories['JSON Configuration']) {
-      body += `- Review and update configuration settings\n`;
+      body += '- Review and update configuration settings\n';
     }
     
-    body += `- Monitor application logs after deployment\n`;
-    body += `- Be prepared to rollback if issues arise\n`;
+    body += '- Monitor application logs after deployment\n';
+    body += '- Be prepared to rollback if issues arise\n';
 
     return body;
   }
@@ -818,7 +782,6 @@ export class CreatePRTool {
     
     let summary = 'This pull request ';
     
-    // Determine primary purpose
     const commitCounts = Object.entries(commitTypes as Record<string, any[]>)
       .map(([type, commits]) => ({ type, count: commits.length }))
       .sort((a, b) => b.count - a.count);
@@ -860,7 +823,7 @@ export class CreatePRTool {
       summary += `. Risk assessment: **${impactAnalysis.riskLevel}**`;
       
       if (impactAnalysis.potentialBreaking?.length > 0) {
-        summary += `. **Note:** This PR contains potential breaking changes that require careful review`;
+        summary += '. **Note:** This PR contains potential breaking changes that require careful review';
       }
     }
     
@@ -890,7 +853,6 @@ export class CreatePRTool {
   }
 }
 
-// Tool definition for MCP
 export const createPRTool = {
   name: 'create-pr',
   description: 'Create a comprehensive pull request with detailed analysis of changes',
