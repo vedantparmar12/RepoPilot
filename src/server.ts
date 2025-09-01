@@ -13,6 +13,7 @@ import { ListFilesTool } from './tools/list-files';
 import { ReadFileTool } from './tools/read-file';
 import { AddCommentTool } from './tools/add-comment';
 import { SubmitReviewTool } from './tools/submit-review';
+import { CreateIssueTool } from './tools/create-issue';
 import { createPRTool } from './tools/create-pr';
 import { MCPTool } from './types/mcp';
 import { createLogger } from './utils/logger';
@@ -52,7 +53,8 @@ export class GitHubPRServer {
       new ListFilesTool(this.githubClient),
       new ReadFileTool(this.githubClient),
       new AddCommentTool(this.githubClient),
-      new SubmitReviewTool(this.githubClient)
+      new SubmitReviewTool(this.githubClient),
+      new CreateIssueTool(this.githubClient)
     ];
 
     // Register create-pr tool with manual JSON schema conversion
