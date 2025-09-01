@@ -1,13 +1,15 @@
-# GitHub PR Manager for MCP
+# GitHub PR & Issue Manager for MCP
 
-A powerful Model Context Protocol (MCP) server that lets AI assistants interact with GitHub pull requests. Whether you're using Cursor, VS Code, or Claude Desktop, this tool enables smart code reviews, commenting, and PR management - all while handling large files intelligently through automatic pagination.
+A comprehensive Model Context Protocol (MCP) server that enables AI assistants to interact with GitHub pull requests and issues. Whether you're using Cursor, VS Code, or Claude Desktop, this tool provides smart code reviews, issue management, PR commenting, and comprehensive project workflows - all while handling large files intelligently through automatic pagination.
 
 ## What This Does
 
 Imagine having an AI assistant that can:
 - Browse through massive pull requests without breaking a sweat
+- Create, update, and manage GitHub issues professionally
 - Add thoughtful comments exactly where they're needed in the code
 - Submit comprehensive reviews with specific feedback
+- Close issues with proper reasoning and documentation
 - Handle files with thousands of lines by automatically chunking them into digestible pieces
 
 All of this happens seamlessly within your favorite AI-powered IDE!
@@ -15,8 +17,9 @@ All of this happens seamlessly within your favorite AI-powered IDE!
 ### Key Capabilities
 
 - **🔍 Advanced PR Analysis**: Intelligent categorization, pattern recognition, and impact assessment
+- **📋 Complete Issue Management**: Create, update, close, and comment on GitHub issues professionally
 - **📝 Automated Review Generation**: Smart review creation with contextual insights
-- **💬 Inline Comments**: Precise code-level feedback and suggestions
+- **💬 Inline Comments**: Precise code-level feedback and suggestions for PRs and issues
 - **📊 Comprehensive Reporting**: Detailed statistics and change summaries
 - **⚡ Performance Optimized**: Smart pagination and rate limiting
 - **🛡️ Error Resilient**: Robust error handling with user-friendly messages
@@ -27,6 +30,7 @@ All of this happens seamlessly within your favorite AI-powered IDE!
 
 ### 🔧 Core Tools
 
+#### Pull Request Management
 | Tool | Description | Key Features |
 |------|-------------|--------------|
 | **create-pr** | Create pull requests with auto-generated content | • Intelligent title/body generation<br>• Advanced file categorization<br>• Pattern analysis<br>• Impact assessment |
@@ -35,6 +39,13 @@ All of this happens seamlessly within your favorite AI-powered IDE!
 | **read-file** | Read specific file changes | • Patch analysis<br>• Context-aware chunking<br>• Syntax highlighting support |
 | **add-comment** | Add inline comments to PR files | • Multi-line support<br>• Side-specific comments<br>• Rich markdown support |
 | **submit-review** | Submit comprehensive reviews | • Auto-approval logic<br>• Batch comment submission<br>• Status tracking |
+
+#### Issue Management
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **create-issue** | Create GitHub issues professionally | • Professional formatting<br>• Priority levels<br>• Auto-structured templates<br>• Assignee & label support |
+| **update-issue** | Update existing issues comprehensively | • Title/description editing<br>• State management<br>• Assignee/label updates<br>• Milestone management |
+| **close-issue** | Close issues with proper documentation | • Completion reasons<br>• Closing comments<br>• State tracking<br>• Professional closure |
 
 ### 🧠 Intelligence Features
 
@@ -384,6 +395,15 @@ The AI will post your comment directly to the PR.
 ### Example 4: Submit a Review
 Ask: "Submit an approving review for this PR with a comment about the excellent test coverage"
 
+### Example 5: Create a Professional Issue
+Ask: "Create a new issue for implementing user authentication with OAuth2 support, assign it to me, and label it as enhancement"
+
+### Example 6: Update Issue Status
+Ask: "Update issue #42 to mark it as completed and add a milestone"
+
+### Example 7: Close Issues Professionally
+Ask: "Close issue #38 as completed with a comment explaining the resolution"
+
 ## Troubleshooting Common Issues
 
 ### Cursor-Specific: Red Error on "node dist/index.js"
@@ -655,6 +675,97 @@ Submits a comprehensive review with optional inline comments.
 }
 ```
 
+### create-issue
+
+Creates a new GitHub issue with professional formatting and structure.
+
+**Parameters:**
+- `owner` (string): Repository owner
+- `repo` (string): Repository name
+- `title` (string): Issue title
+- `body` (string, optional): Issue description
+- `assignees` (array, optional): Usernames to assign
+- `milestone` (number, optional): Milestone number
+- `labels` (array, optional): Label names
+- `priority` (string, optional): Priority level ("low", "medium", "high", "critical")
+
+**Example:**
+```typescript
+{
+  "owner": "vedantparmar12",
+  "repo": "github-pr",
+  "title": "Implement advanced search functionality",
+  "body": "Add comprehensive search capabilities to improve user experience",
+  "assignees": ["vedantparmar12"],
+  "labels": ["enhancement", "feature"],
+  "priority": "high"
+}
+```
+
+**Professional Formatting Features:**
+- Auto-adds priority indicators
+- Structures content with sections (Description, Acceptance Criteria, Additional Notes)
+- Maintains professional tone without emoji
+- Creates actionable issue templates
+
+### update-issue
+
+Updates an existing GitHub issue with comprehensive modification options.
+
+**Parameters:**
+- `owner` (string): Repository owner
+- `repo` (string): Repository name
+- `issue_number` (number): Issue number to update
+- `title` (string, optional): New title
+- `body` (string, optional): New description
+- `state` (string, optional): Issue state ("open", "closed")
+- `state_reason` (string, optional): Reason for state change ("completed", "not_planned", "reopened")
+- `assignees` (array, optional): Assignees (replaces existing)
+- `milestone` (number|null, optional): Milestone (null removes)
+- `labels` (array, optional): Labels (replaces existing)
+
+**Example:**
+```typescript
+{
+  "owner": "vedantparmar12",
+  "repo": "github-pr",
+  "issue_number": 42,
+  "title": "Implement advanced search functionality - Updated Scope",
+  "state": "open",
+  "assignees": ["vedantparmar12", "collaborator"],
+  "labels": ["enhancement", "feature", "high-priority"],
+  "milestone": 3
+}
+```
+
+### close-issue
+
+Closes a GitHub issue with proper documentation and reasoning.
+
+**Parameters:**
+- `owner` (string): Repository owner
+- `repo` (string): Repository name
+- `issue_number` (number): Issue number to close
+- `reason` (string, optional, default: "completed"): Closing reason ("completed", "not_planned")
+- `comment` (string, optional): Closing comment to add
+
+**Example:**
+```typescript
+{
+  "owner": "vedantparmar12",
+  "repo": "github-pr",
+  "issue_number": 42,
+  "reason": "completed",
+  "comment": "Feature successfully implemented and tested. All acceptance criteria have been met."
+}
+```
+
+**Features:**
+- Automatically adds closing comments if provided
+- Sets appropriate state reasons
+- Maintains professional closure documentation
+- Tracks closure timestamps and reasons
+
 ---
 
 ## 📊 Project Structure
@@ -670,11 +781,14 @@ github-pr/
 │   │   └── 📘 chunker.ts            # Smart content chunking
 │   ├── 📁 tools/                    # MCP tools implementation
 │   │   ├── 📘 add-comment.ts        # Inline comment tool
+│   │   ├── 📘 close-issue.ts        # Issue closing with documentation
+│   │   ├── 📘 create-issue.ts       # Professional issue creation
 │   │   ├── 📘 create-pr.ts          # PR creation with analysis
 │   │   ├── 📘 list-files.ts         # File listing with pagination
 │   │   ├── 📘 read-file.ts          # File diff reading
 │   │   ├── 📘 read-pr.ts            # PR information retrieval
-│   │   └── 📘 submit-review.ts      # Review submission
+│   │   ├── 📘 submit-review.ts      # Review submission
+│   │   └── 📘 update-issue.ts       # Comprehensive issue updates
 │   ├── 📁 types/                    # TypeScript definitions
 │   │   ├── 📘 github.ts             # GitHub API types
 │   │   ├── 📘 mcp.ts                # MCP protocol types
@@ -698,10 +812,11 @@ github-pr/
 
 ### Key Components
 
-- **Core Size**: 29 files, ~10K lines of code
+- **Core Size**: 32 files, ~12K lines of code
 - **Primary Language**: TypeScript (94%)
 - **Architecture**: Modular, event-driven MCP server
 - **Testing**: Jest with 100% critical path coverage
+- **Tools Available**: 9 comprehensive GitHub management tools
 
 ---
 
@@ -759,6 +874,51 @@ const result = await mcp.callTool("create-pr", {
 // - Architecture pattern detection
 // - Breaking change identification
 // - Pre-merge checklist
+```
+
+### Professional Issue Management
+
+```typescript
+// Create a professionally formatted issue
+const issue = await mcp.callTool("create-issue", {
+  owner: "vedantparmar12",
+  repo: "github-pr",
+  title: "Implement advanced filtering system",
+  body: "Add comprehensive filtering capabilities to improve search functionality",
+  priority: "high",
+  labels: ["enhancement", "feature", "high-priority"],
+  assignees: ["vedantparmar12"]
+});
+
+// Update issue with additional information
+const updatedIssue = await mcp.callTool("update-issue", {
+  owner: "vedantparmar12",
+  repo: "github-pr",
+  issue_number: 42,
+  body: `## Updated Requirements
+
+Based on user feedback, the filtering system should include:
+- Advanced search operators
+- Saved filter presets
+- Real-time filtering updates
+- Export filtered results
+
+## Implementation Plan
+1. Design filter architecture
+2. Implement core filtering logic
+3. Add UI components
+4. Write comprehensive tests`,
+  milestone: 3
+});
+
+// Close issue when completed
+const closedIssue = await mcp.callTool("close-issue", {
+  owner: "vedantparmar12",
+  repo: "github-pr",
+  issue_number: 42,
+  reason: "completed",
+  comment: "Feature successfully implemented and deployed. All acceptance criteria met and thoroughly tested."
+});
 ```
 
 ### Comprehensive PR Review
