@@ -121,7 +121,6 @@ export class SubmitReviewTool implements MCPTool {
     output += `---\n`;
     output += `The review has been successfully submitted to PR #${input.pr_number}.`;
     
-    // Add a note about the review type
     if (input.event === 'APPROVE') {
       output += `\n\nThis approval allows the PR to be merged if all other requirements are met.`;
     } else if (input.event === 'REQUEST_CHANGES') {
