@@ -689,7 +689,7 @@ export class CreatePRTool {
       }
 
       if (impactAnalysis.potentialBreaking?.length > 0) {
-        body += `### ⚠️ Potential Breaking Changes\n`;
+        body += `### Potential Breaking Changes\n`;
         impactAnalysis.potentialBreaking.forEach((change: string) => {
           body += `- ${change}\n`;
         });

@@ -37,14 +37,14 @@ export class CreateIssueTool implements MCPTool {
       
       // Add priority section if specified
       if (args.priority) {
-        const priorityEmoji = {
-          'low': '🔵',
-          'medium': '🟡', 
-          'high': '🟠',
-          'critical': '🔴'
+        const priorityLabel = {
+          'low': 'LOW',
+          'medium': 'MEDIUM', 
+          'high': 'HIGH',
+          'critical': 'CRITICAL'
         }[args.priority];
         
-        formattedBody = `**Priority:** ${priorityEmoji} ${args.priority.toUpperCase()}\n\n${formattedBody}`;
+        formattedBody = `**Priority:** ${priorityLabel}\n\n${formattedBody}`;
       }
 
       // Add professional structure if body is provided
