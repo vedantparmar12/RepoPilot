@@ -131,7 +131,7 @@ First, let's get the project on your machine:
 
 ```bash
 # Clone the repository
-git clone https://github.com/vedantparmar12/github-pr
+git clone https://github.com/vedantparmar12/RepoPilot.git
 cd mcp-github-pr
 
 # Install all the dependencies
