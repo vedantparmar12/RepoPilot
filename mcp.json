@@ -1,0 +1,50 @@
+{
+  "name": "github-pr-manager",
+  "version": "1.0.0",
+  "description": "GitHub PR operations with smart pagination for MCP",
+  "author": "MCP GitHub PR Team",
+  "license": "MIT",
+  "tools": [
+    {
+      "name": "read-pr",
+      "description": "Read pull request details including metadata and statistics"
+    },
+    {
+      "name": "list-files",
+      "description": "List all files changed in a pull request with pagination support"
+    },
+    {
+      "name": "read-file",
+      "description": "Read specific file changes with automatic pagination for large diffs"
+    },
+    {
+      "name": "add-comment",
+      "description": "Add an inline comment to a specific file and line in a pull request"
+    },
+    {
+      "name": "submit-review",
+      "description": "Submit a complete review with approval status and optional inline comments"
+    }
+  ],
+  "requiredPermissions": [
+    "github:read",
+    "github:write"
+  ],
+  "configuration": {
+    "github_token": {
+      "type": "string",
+      "required": true,
+      "description": "GitHub Personal Access Token with repo scope"
+    },
+    "max_tokens_per_chunk": {
+      "type": "number",
+      "default": 4000,
+      "description": "Maximum tokens per response chunk"
+    },
+    "context_ttl_minutes": {
+      "type": "number",
+      "default": 30,
+      "description": "TTL for pagination context tokens in minutes"
+    }
+  }
+}
